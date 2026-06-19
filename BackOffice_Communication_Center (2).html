@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SWAM – BackOffice Communication Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg-base:       #F4F7FB;
+  --bg-surface:    #FFFFFF;
+  --bg-card:       #EEF3FA;
+  --bg-hover:      #E6EDF8;
+  --border:        #D5E1F0;
+  --border-light:  #BDD0E8;
+  --accent:        #0095B6;
+  --accent-hover:  #007A96;
+  --accent-violet: #6B3FA0;
+  --accent-teal:   #00C2CB;
+  --accent-amber:  #F59E0B;
+  --accent-rose:   #E84B6A;
+  --accent-green:  #22C55E;
+  --accent-orange: #F97316;
+  --text-primary:  #1A2B4A;
+  --text-secondary:#3D5473;
+  --text-muted:    #7A90AE;
+  --text-inverse:  #FFFFFF;
+  --sidebar-w:     268px;
+  --header-h:      58px;
+  --radius-sm:     6px;
+  --radius-md:     10px;
+  --radius-lg:     14px;
+  --shadow-sm: 0 1px 4px rgba(0,80,150,.07);
+  --shadow-md: 0 4px 16px rgba(0,80,150,.10);
+  --shadow-lg: 0 8px 32px rgba(0,80,150,.13);
+  --font: "Inter", system-ui, sans-serif;
+  --transition: .18s ease;
+}
+
+html, body { height:100%; font-family:var(--font); background:var(--bg-base); color:var(--text-primary); font-size:13px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+
+#app { display:flex; flex-direction:column; height:100vh; }
+
+/* HEADER */
+header {
+  height:var(--header-h); background:var(--bg-surface);
+  border-bottom:1px solid var(--border);
+  box-shadow: 0 1px 6px rgba(0,100,160,.07);
+  display:flex; align-items:center; padding:0 20px; gap:16px; flex-shrink:0; z-index:100;
+}
+.header-logo { display:flex; align-items:center; gap:12px; flex-shrink:0; }
+.header-logo img { height:34px; object-fit:contain; }
+.header-logo-divider { width:1px; height:28px; background:var(--border); }
+.header-logo-text h1 { font-size:13px; font-weight:700; color:var(--text-primary); letter-spacing:.01em; }
+.header-logo-text span { font-size:11px; color:var(--text-muted); }
+
+.header-search { flex:1; max-width:480px; position:relative; }
+.header-search input {
+  width:100%; background:var(--bg-base); border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:7px 12px 7px 34px;
+  color:var(--text-primary); font-family:var(--font); font-size:12px; outline:none;
+  transition:border-color var(--transition), box-shadow var(--transition);
+}
+.header-search input::placeholder { color:var(--text-muted); }
+.header-search input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,149,182,.1); }
+.search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:13px; pointer-events:none; }
+.search-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px; display:none; }
+.search-clear.visible { display:flex; }
+.header-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+
+/* SYNC STATUS */
+.sync-badge {
+  display:inline-flex; align-items:center; gap:5px;
+  font-size:11px; padding:4px 10px; border-radius:20px;
+  font-weight:500; border:1px solid var(--border);
+  color:var(--text-muted); background:var(--bg-base);
+  transition: all .3s;
+}
+.sync-badge.syncing { color:var(--accent); border-color:rgba(0,149,182,.3); background:rgba(0,149,182,.05); }
+.sync-badge.ok { color:var(--accent-green); border-color:rgba(34,197,94,.3); background:rgba(34,197,94,.05); }
+.sync-badge.err { color:var(--accent-rose); border-color:rgba(232,75,106,.3); background:rgba(232,75,106,.05); }
+.sync-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+.sync-badge.syncing .sync-dot { animation: pulse .8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* MAIN */
+.main-body { display:flex; flex:1; overflow:hidden; }
+
+/* SIDEBAR */
+aside {
+  width:var(--sidebar-w); background:#FAFCFF;
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; flex-shrink:0; overflow:hidden;
+}
+.sidebar-top { padding:12px; border-bottom:1px solid var(--border); }
+.sidebar-nav { flex:1; overflow-y:auto; padding:8px 0; }
+.sidebar-nav::-webkit-scrollbar { width:4px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background:var(--border-light); border-radius:2px; }
+
+.nav-block { margin-bottom:2px; }
+.nav-block-header {
+  display:flex; align-items:center; gap:8px; padding:7px 12px;
+  cursor:pointer; border-radius:var(--radius-sm); margin:0 6px;
+  transition:background var(--transition); user-select:none;
+}
+.nav-block-header:hover { background:var(--bg-hover); }
+.nav-block-header.active { background:var(--bg-hover); }
+.nav-block-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.nav-block-label { flex:1; font-size:12px; font-weight:600; color:var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-block-count { font-size:10px; color:var(--text-muted); background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:1px 6px; flex-shrink:0; }
+.nav-block-chevron { font-size:10px; color:var(--text-muted); transition:transform .2s; flex-shrink:0; }
+.nav-block.open .nav-block-chevron { transform:rotate(90deg); }
+.nav-block-children { display:none; padding-left:20px; }
+.nav-block.open .nav-block-children { display:block; }
+
+.nav-sub {
+  display:flex; align-items:center; gap:8px; padding:5px 12px 5px 8px;
+  cursor:pointer; border-radius:var(--radius-sm); margin:1px 6px;
+  transition:background var(--transition); color:var(--text-secondary); font-size:12px;
+}
+.nav-sub:hover { background:var(--bg-hover); color:var(--text-primary); }
+.nav-sub.active { background:rgba(0,149,182,.08); color:var(--accent); }
+.nav-sub-bar { width:2px; height:14px; border-radius:1px; flex-shrink:0; }
+.nav-sub-label { flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.nav-sub-count { font-size:10px; color:var(--text-muted); }
+
+/* CONTENT */
+.content { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg-base); }
+.content-header { padding:16px 20px 0; flex-shrink:0; }
+.breadcrumb { display:flex; align-items:center; gap:6px; margin-bottom:12px; }
+.breadcrumb span { font-size:11px; color:var(--text-muted); }
+.breadcrumb b { font-size:11px; color:var(--text-secondary); font-weight:500; }
+.breadcrumb .sep { color:var(--border-light); }
+.content-title-row { display:flex; align-items:center; gap:12px; margin-bottom:16px; }
+.content-title-row h2 { font-size:17px; font-weight:700; color:var(--text-primary); }
+.count-badge { font-size:11px; color:var(--text-muted); background:var(--bg-surface); border:1px solid var(--border); border-radius:10px; padding:2px 8px; }
+
+/* COMMS LIST */
+.comms-list { flex:1; overflow-y:auto; padding:0 20px 20px; }
+.comms-list::-webkit-scrollbar { width:4px; }
+.comms-list::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+
+.comm-card {
+  background:var(--bg-surface); border:1px solid var(--border);
+  border-radius:var(--radius-md); padding:14px 16px; margin-bottom:8px;
+  cursor:pointer; transition:border-color var(--transition), box-shadow var(--transition);
+  position:relative;
+  box-shadow: var(--shadow-sm);
+}
+.comm-card:hover { border-color:var(--border-light); box-shadow:var(--shadow-md); }
+.comm-card.selected { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,149,182,.08); }
+.comm-card-top { display:flex; align-items:flex-start; gap:10px; margin-bottom:6px; }
+.comm-card-accent { width:3px; border-radius:2px; flex-shrink:0; align-self:stretch; min-height:14px; }
+.comm-card-info { flex:1; min-width:0; }
+.comm-card-subject { font-size:13px; font-weight:600; color:var(--text-primary); margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comm-card-to { font-size:11px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.comm-card-to span { color:var(--accent); font-weight:500; }
+.comm-card-meta { display:flex; align-items:center; gap:8px; margin-top:6px; }
+.comm-card-date { font-size:10px; color:var(--text-muted); margin-left:auto; }
+.comm-card-actions { display:flex; gap:4px; opacity:0; transition:opacity var(--transition); position:absolute; right:12px; top:12px; }
+.comm-card:hover .comm-card-actions { opacity:1; }
+.comm-card-context { display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; }
+.ctx-tag { font-size:10px; padding:1px 6px; border-radius:8px; font-weight:500; }
+
+/* EMPTY STATE */
+.empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:var(--text-muted); text-align:center; gap:10px; }
+.empty-state .empty-icon { font-size:40px; margin-bottom:4px; opacity:.4; }
+.empty-state p { font-size:13px; }
+.empty-state small { font-size:11px; }
+
+/* LOADER */
+.loader-wrap { display:flex; align-items:center; justify-content:center; padding:60px 20px; gap:10px; color:var(--text-muted); }
+.spinner { width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* DETAIL PANEL */
+.detail-panel {
+  width:420px; background:var(--bg-surface); border-left:1px solid var(--border);
+  display:flex; flex-direction:column; flex-shrink:0;
+  transition:width .22s ease; overflow:hidden;
+  box-shadow: -2px 0 12px rgba(0,80,150,.05);
+}
+.detail-panel.hidden { width:0; border:none; box-shadow:none; }
+.panel-header { padding:14px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.panel-header h3 { font-size:13px; font-weight:600; flex:1; }
+.panel-body { flex:1; overflow-y:auto; padding:16px; }
+.panel-body::-webkit-scrollbar { width:4px; }
+.panel-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+.field-group { margin-bottom:16px; }
+.field-label { font-size:10px; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+.field-value { font-size:12px; color:var(--text-primary); line-height:1.6; }
+.field-value.body-text {
+  background:var(--bg-base); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:10px 12px; white-space:pre-wrap; font-size:12px; font-family:var(--font);
+  max-height:280px; overflow-y:auto;
+}
+.tag { display:inline-flex; align-items:center; gap:4px; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:500; }
+.tag-block { background:rgba(0,149,182,.1); color:var(--accent); }
+.tag-sub { background:rgba(107,63,160,.1); color:var(--accent-violet); }
+.panel-actions { padding:12px 16px; border-top:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; flex-shrink:0; }
+
+/* BUTTONS */
+.btn { display:inline-flex; align-items:center; gap:6px; font-family:var(--font); font-size:12px; font-weight:500; padding:6px 12px; border-radius:var(--radius-sm); border:none; cursor:pointer; transition:all var(--transition); white-space:nowrap; }
+.btn:disabled { opacity:.4; cursor:default; }
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover:not(:disabled) { background:var(--accent-hover); }
+.btn-secondary { background:var(--bg-base); color:var(--text-secondary); border:1px solid var(--border); }
+.btn-secondary:hover:not(:disabled) { background:var(--bg-hover); color:var(--text-primary); }
+.btn-danger { background:rgba(232,75,106,.08); color:var(--accent-rose); border:1px solid rgba(232,75,106,.2); }
+.btn-danger:hover:not(:disabled) { background:rgba(232,75,106,.15); }
+.btn-ghost { background:transparent; color:var(--text-muted); }
+.btn-ghost:hover:not(:disabled) { background:var(--bg-hover); color:var(--text-primary); }
+.btn-icon { padding:5px; border-radius:var(--radius-sm); font-size:13px; }
+.btn-success { background:rgba(34,197,94,.08); color:var(--accent-green); border:1px solid rgba(34,197,94,.2); }
+.btn-success:hover:not(:disabled) { background:rgba(34,197,94,.15); }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(26,43,74,.35); display:flex; align-items:center; justify-content:center; z-index:1000; opacity:0; pointer-events:none; transition:opacity .2s; }
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-lg); width:100%; max-width:560px; max-height:90vh; display:flex; flex-direction:column; box-shadow:var(--shadow-lg); transform:translateY(12px) scale(.98); transition:transform .22s ease; }
+.modal-overlay.open .modal { transform:none; }
+.modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+.modal-header h3 { font-size:14px; font-weight:700; flex:1; }
+.modal-body { padding:20px; overflow-y:auto; flex:1; }
+.modal-footer { padding:14px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; }
+
+/* FORM */
+.form-group { margin-bottom:14px; }
+.form-label { display:block; font-size:11px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; text-transform:uppercase; letter-spacing:.06em; }
+.form-label .req { color:var(--accent-rose); margin-left:2px; }
+.form-input, .form-select, .form-textarea {
+  width:100%; background:var(--bg-base); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:8px 10px; color:var(--text-primary);
+  font-family:var(--font); font-size:12px; outline:none;
+  transition:border-color var(--transition), box-shadow var(--transition);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(0,149,182,.1); }
+.form-input::placeholder, .form-textarea::placeholder { color:var(--text-muted); }
+.form-textarea { resize:vertical; min-height:120px; line-height:1.6; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.form-hint { font-size:10px; color:var(--text-muted); margin-top:4px; }
+.form-error { font-size:10px; color:var(--accent-rose); margin-top:4px; display:none; }
+.form-error.visible { display:block; }
+
+/* TOAST */
+.toast-container { position:fixed; bottom:20px; right:20px; display:flex; flex-direction:column; gap:8px; z-index:2000; }
+.toast { background:var(--bg-surface); border:1px solid var(--border); border-radius:var(--radius-md); padding:10px 14px; font-size:12px; font-weight:500; color:var(--text-primary); box-shadow:var(--shadow-md); display:flex; align-items:center; gap:8px; animation:slideIn .2s ease; min-width:220px; }
+.toast.success { border-left:3px solid var(--accent-green); }
+.toast.error   { border-left:3px solid var(--accent-rose); }
+.toast.info    { border-left:3px solid var(--accent); }
+@keyframes slideIn { from { transform:translateX(20px); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes fadeOut { to { opacity:0; transform:translateX(20px); } }
+
+/* CONFIRM */
+.confirm-dialog { max-width:400px; }
+
+mark { background:rgba(0,149,182,.15); color:var(--accent); border-radius:2px; padding:0 1px; }
+
+@media (max-width:900px) { .detail-panel { width:360px; } }
+@media (max-width:700px) {
+  aside { width:200px; }
+  .detail-panel { position:fixed; right:0; top:var(--header-h); bottom:0; width:320px !important; }
+  .detail-panel.hidden { width:0 !important; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-logo">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIUAAAAtCAYAAACAlai/AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAAEnQAABJ0Ad5mH3gAACA9SURBVHhe7Zt3VF3Hve/z1ru5N8mz48ROcnNvrn0T9+7EsRPHjuO4d8ndliXZlqxebNmy1VCzRDucQu/nAKKLKnoRIBAIECAQHQ69i9476PPWzBFIHIGEkj9813v6rrUXOnvPzN4z853vr8zoB1zHdRjhB8Y3ruM6rpPiOi7DdVJcx2W4TorruAzXRIrJqfPUDkyS0zFGQsMg4bUDRNQOktI8zNnuCdqGp4yrSPSPTZFUN0hcVS8J+h6SqnrQd4wYF1sQLR0D5BS3klfcypniForL2hgaHjcuNi+mJqdore2gJq/WcJ2upq2ihcnJaeOil2FybJKBll46ytqoz66hNl1PbYae5oJGums6GekdNq5yzZgcn6SzoZf6ojZK0mooSKikIEmPPqeJ1qouRgbGjKvMwcTEFO31vVTnt3D2RDV5on5KNfq8ZlqquhkeWNw4XYpFkeL8echpH8WyoJtXYlq5za+eG7R6fnTh+plHNfcHN7Ii5Ry++kFahibn1C/qHOMB71p+bXuWW63zuc82H8vUxjllroTQZD0f7Ixi+c5IPv02nO2HEqmu6zYuNi9GB8eIc0zC+RNn3Fc64v6umrjDoQz1jxoXncX40Dht+fXke6UT900gfh864vaKCpcXrXB60QrX123w/8yTRPNYyuNL6W/pM27iqpiamKL2TBOxdunYrQhg95P2bL5Pwbo7zFl7pwVbHtZw+A0vAg4mUZpez9jIhHET1Ba2EWl3CsUyf7Y9Zsfauy35XNa3ZOsfbPluyRF8DyZRmFLN8FXIdSmuSoqB8WmcS/p4OKSJf9VVc4NOkKCSmy+5fu5RyU26Sn6iq+JGzzqWp7RztuviRxR3jfF7/zpucyriDocCHnYqQJXeNOc9V0J4WjUf74vl070xrN4TyQ7zZGrqe4yLzQtBikTXFFzXuKH73AXdMlviLSIYGpifFH0NXZxxP0Hwcie8X1fh9aYajyUadEs0uL+pwfUNNc6vqXF4WYXdc0rsn9cQ/k0IVWlVUlkWg+HeUdI8czB90YUv7rXkywet+OJhBV88bMWWB63Y9IAVG++3Yv09lqy9Q8H2JxyItM1gsMegrpPjU6QHF3PgVU/W3m7Jurst2XC/FRtFvZlL1L/XkjW3W/Dlo7b4HUqms6nf+FPmxRVJMTQ5jVV+Dz/3qpFkuMVTL0nwf3R6fqit5l/cq/ihtoof6ar4ma5SPhcE+TdtFS/EtlLRa5CuEkGKgDpudSrmDsezPOxSiCqj2fh1CyI8rYZl++P4ZH8Mq0yi+NYymeqGxZMiwfUELmvd0a5xRfuxHfGWEQwakUKoYVt+HUk7/Al4S43fO2p837XG5x1rPJeo0b6uwlWoxStKnF9R4fSaGsdXNdi/pEbzjBXOS5zI8clhdAGyzWC4d4RYdSomj2v4+mEF3/5RxfZHVWx7xIpN91uy4R4L1t9twfp7FXJyNz2oZP09CjbepyLYMpXB3hFOBhay7Y92kgziubg2CJW520KqjCTJfYqLz+5VsOYOBQ7rw+lovLqqXZEUCU3D3Opfz426Sn7hKRRCz40eVTwS3MDHye1sSO9kVVoHL8a08IsjtReII5RDz0901Xyd3c3YNFT0jPFIYD3/5VLM75yKeNClEOU1kuLD/fGsEGphEsU3ihNUN/QaF5sXghTxridwWqvFbY0rbivsiVNcTorWvDoSv/Ai8C0lgR9YE/CBNb5vq/F6zQrvpTYc/cyN4HWeBK7W4vmuPQ7PWWH/vBKHV9TYvaJB/Xcl9i/bc0p7ivGR+e34+PA4yc4Z7H/Smh2PWrHrcRU7HlOx7QFLtj2oZO+zThx6Q8v+l9z48lEbucoFOSQx7lXw9eP2+B5IZM+zrnKixX2hCGtuN2fT/Sp2P+/C/te07H7OlU0PqPn8dnP5fNNDSkmwNbdbcsQkkaH+K5uSBUkxMDbFN5kd0mQYJrqSm72q+SipncTGYXqGJ5iemmJkfEoqgW1Jv/QrbtBWcotHpVSOu4IaqRmYRN87zkOBDfynSwm/dSriftciFKdajF+5IEJP1vD+wQSWH4jnk73RfH2NpIhzS8VxvRaXdW64rnAkRhE1hxS91e2c2OFP8DtKQpbZEPShNf5vKwn52IE080jKws7QkFlNc34DTTm16BNKOOWUQsAaLxxeUGH3khrblzSo/q7E4TUHzgSfmfMNAtNT0+SGnMX8eXt2P2qJyRMqdj2mZPtDCqw/8CbROYuzCXoqsuopPVnLqaBiPHfE8sUfbAzEeMAwsevvtTIQ4iEDUTY/qMb28xCSvM5QeKKG0qx6zqbUkOxdgM2aEDY/pL5IrPsUbHnEmtOxFZwX0rgAFiRFbf8Er0U3c6OHwWz8WKvnuahmyrsXZpnV2V5+6lXHD9yq+F/u1fyLVz2xjcOUdo/xUFATv3Yp4zaXIu51K8Iys9W4+oIIPVnLuwcTWXYwnhX7Y/lScYKqxZJiaIwY9zTs13vgtE6L8wpHoqwukmK0f5g8xwTC3lMR9rE1octsOPqOmritXuhjChjpHjJuchYthU0cN4vB8WWNJIbNSxqsnrZCt1xHc+FcJaxMrcJmqTt7/qhg35MqTP6s5JuHLHFbd5T6s/OPxcjgOLHO2dKJnDEHMyZF/N76sAavHXF0NM1vEjqa+/HancCmB9UGxXhQybo7LXDZFklf18KR04KkqOqb4LmIZn4qTIJHJf9bW8XG9A6YWjiUa+gfR13Ux47T3ezO7cHkTB+FXeMUdY3xQHATv3Ir479cSrjHrQSLayFFeh3vHEzkw4PxfLw/li+UaVQ1zD8QxhgZGiPaPQ3bDZ44rtPh9IkjkYIUgwZSNGbpiVzrQtgyDceW2xD8vpr4LV40nqoybmpeDHYOkmQZh8PL1ti+qEbzghrV39XEHo6T4aZAY0ETrsuPsO8xBQeeUrPvL0p2PmKJ25pAWivbjZucg4nxSXTbo9n8gIqN9xt8BDm5d1ti+b4vnc1Xdh47W/pRrQiUpmSGTF894UBV/sLjvyApWgYn+CihlRt0VVIpfqLT8+SxRnLarpJfOH+e89PnpTxNTxskqqh7nHuDmvmlWzm/cS3hLvdSLLIW/ihjBKfX8dahJN7/LpGPDsSxVZmG/hpIEaU9ifUGT+w36LD/1JkIVTTDIxNMjEyQqz1B4IfWhK+wlaSIWG6HPjJP9mGx6K7rxH/NEQMpnlOieU5DsnWyHIOuum58NgRw8HEFh/6q5uBTKnb/3gK31f40l50zbmpelGXW882TDrNmQEzsF3/QEGl/yrjovIhzzWHjAypZT5qgu6zICC9loR4uSIrxqfMo87tllCGU4mYReXhW8UxkM5rCPnLOjTA6MX+yyhiF3ePcE9LCLe4V/IdbKXdqSzG/BlIEpdez9FAy732XyIcH4tmiOol+EV60gCBFpPYkmo1e2G3wwPYzF46pYhibmKarpp2onf4ELLcl9BM7Qj9Qc8osjKFzi2t7BmLyC0LypFpYP6ciYvcx+s/1M9A+QPieSMz+YoXp0yoOP62SauH2mS+NRYv3qfo7hzB721v6E2JS191lyd7n3SjPbjAuOi/Onqhhz/Ousp6ov+FuJVFOWTLxNR8WJIVAYdcYfwlv5scX1EJEFcK3+JVXDX8Ob+bdxDa2Z3XjWj5AZtsIg+Pzv0SQ4q6QFm7WVvDvbmXcri3D7FpIkVHPm4eTeee749Lh3KRKvyZSROjSUW06gs1GT2xWuRCujpWErsuqwm+1KwGfOhC80o5jy2yoisi7ohO2EDqq2vF4z5Wgzf70N/cyMTzBcWUiVs+osfibCrNnVBz8kwJ3QYgCg78xo6RXw0j/GPafh0q/QFzr7lZgutSbtkUm8GpL2jB7z4e1d1gYlOJuBX5myQwNzu8fXpEUwn0QkcZjYc38m65aJq1EFPJTXaXMZP7QXc+Nuir+27eGP4Y38Xp8Gztze0lpGZ0zsDOkEBHJr9zL+Z2unMNZbXPedSUczWjgddMU3jZN4r3vEtigTqey8cq2dAaCFMd06Sg3eWO9yRP1KlfCNHEMj45TlVqOzyoX/D5zIHClHZGrnGlOrzBuYlHobeoh2uQYrUUtsu+ZHqewedEaxTNKFM+qOPyEAu2nPjTkG5J2eXFl1BQsLoE3OjSO4+YwNooI5AIpFO/50926uDFoqetGuSJQhrgGUljiuS+ewb75cypXJIWAmNuCznF2ZXfxcFAjN3nVcaNXLTd56OUki0ymCEOFgvyru56fe1XzYEgTW7K6aRw0OFrCp7grtIWbdHp+oS3nv3UVHM5anD0VCDzVwGumJ1gq1SKR9ZqMayDFOGG6DCw3e6Pa5IVqtTuhmji5d1KZUsaR1a74fOZIwEo7Ita60py1OAfTGBMj4/Q0dElCFEcV4rzEEeUzSpTPqbB4ygrdyiPU5xpS+3lhhdh84ElJWrVxM/NiPlJYvedPT9uAcdF50dbQi/qTo3NI4bX3nyDFDIYmpqnsHSe2fgjT3C7eS2jjvqMN3Hyklpu8avmZzpDNFGoinNKbvGpYltJO99g05b0TkhQikhEm5DaPCg5mLp4UARkNvGKWyptmybx9+Dhr1BlULNLRHB4aI1SXgcUWH5Sbj2D1uTthNvGMjk9SmVaB12o3vFc54feJPeFrXGjKqDRu4ppQm1GN50fuaJ5VykhE8bQVniu9qMmslc+L48pQvuSI+YuOVGbVG1efF4IUTpvmIcUilWJeUvwzSjEfRiamaR+Zorp/Qu6QKgu6eSG6hV/51PFzT4P/IQngXYtLaR+FHaPcF9xkuOdRyX/oKtmR0Wnc7ILwOFHLc4dTeNM8haWHk1hpdZKS+sXlKQb6R/C0TcJsqw+KLd4oPtdyzPG4XNFVWVV4rHHHa7UzvqscCVphL3MT/yhai5rlRpnt8ypsXlSjekaJx3JP9Gl6+b6y4xXYLnVl/2OWWL3hem2kmE8p/ieRwhgiUhEkcSjt587A+guTr+enHnpeP95BYecYDwfXyXS53ETTVvJJ0iKV4vw0tom1/M00jdfNT7DULFmGp6dKFle/s2MQzcEIDm/1xVKQYp0nsZ7p8llbZRtHdwag+8wJn9VO+H1sR7oqiqGOxcnypeit7yL8ywAcXlRh97IK62eVeC73oOJ4hQxvhVI4v+vO4b8oOPSkEtWbruizF08K581hhqzm90mKienz8hyESHeLndLh8SmmruIsT06fl9vnYltd7px66KV/Ud47zuuxzXLvRIS2N2gr+GtYA81XycELnOsbYUdQKX8zS+M1i1SWmKew5FASutgKRhexK1lZ3ob5rjC++8IP8y3eKLf4kHIhDT02OEqqLhW3FY54r3bG7xMHQle7UJtcYtzMFTF4rp/EAxG4vqrG8RUVts8r8fjQjdKY4tl8R5ZvDmZPKDB/RsVhQYol10YKly3/A0hxqm1EOpZ/CmviDyGNvBLTQnLzVRJXwLasLn7mUSV9C+GE3h5QR1nPOIdyuvjlERHB6KXD+d/e1VjndxlXvwwh+ed4SZPNs5YnedUyjTcsTvDm4STW22Wiv0o2b2RkgqP+Oez7KpDvvvTHdIsP1t8eJTf1YoRRkV6J53oPPD9zwneVEwEr7Ejc4Ut70eLOe4z2DpNhdxztm9a4vKbC8SUl2necyA/KnVMuyycHiyetsPi7CtOnlKiXXjspNl/YAPteSXGLZ42MLAzRRRXfZHUxMrmwXHSMTPFqXCs/0Rp8B6EU94U00jw0SWbLCLcFNMp7wue4SVvJ40F1JNQOMDZPm+NT02TV9vGpTwlPKE7xvFU6L1meNKiFWQpvHU5GcbSQ5o6hefMKI6OTpKZVsX9PBCZfBXJwmz8HNh7BQxVP5yXmYbBniCTnZNw/ccJ7lTP+qxw5usKWpB1+tGTqmVjghNf05BT9zT1kWCdy5B073MQ5i1eUaN+yI9crU555ELulM9+W7ZuD5VNWWP5dhdk/QoqtYWz5vknRMDjBG7EtMh8hdkmFf/Abn1p2ZHXKcxKdo9P0jRku8W8Rdq4+0c4vj9TMmgmDT9HOwMR5RienZcQittd/7mnYTxGRyCP+NVic7iSvdZjmvnGa+8YobhvCOauFNz2K+JPmNE+rM3nGKoMXFSd5RapFCm+ZJvPe4WRMdHkk5zXT3D5IV98I7d1DlFS24xt8ll17I/l2ezAm24PY+6U/h7YdJSmyyLirNBU1EbwzEI+VjvisciJQJLNW2BGz2plcTQxNpyrpb+5muHOAoXP9dJS1UBJ0mqgtPni/bYvuTQ3ur6nxWGpLpnOq3D1uzGvktGf27P7Hab8cFH+1kjkL878q0VwjKVy3hrH1IaU8gPO9kUIkKHwrB2TIecPsARo9N3lWcefRRpbEtbE2pY01yW28Ed/G7YEN3ORRJckwE338wrsObUU/0xdWS3rzMPcGNcqQVZT5pUcF/64t51ZtBXd7VPCYZxl/0ZXwqGsxv3co4FGbHP5snc2TqkyesspkR2AxG3X5vGR2giVmybwj9kMOJbLSNIl1Zklss0phm1kiW8Wm2e4Itu0I5dsdIez6OpBdWwLwcEilo2PQuKcSVRl6gr7yxWulA/6fOhD0qT1hci/ElqgV9kSudiZmo46INW6ELHMg8H1bvN/S4LVUIw/geL9rT7Zzqjx91VrSQtA6P44fjpNb5gLGpLB+y5Wq04snhZsgxcPfNymAntEp9uZ0c4t3HT/WXjhTcSEXIdTg4mW4N3M0T5zM+plXDZ+ldco8xQyEz+VZPsBdRxv5kUh06Sr5ta6C/3Qr5VbXYn7rXMSdjgXc55DPQ3ZneNQ2l0c12TymymJjQBm1nSNkVHSy0uE0Lx1KZsmh47x3yLB7unx/rDxr8fmeKNbvjmDzrnC+3BnGtu3BfL3tKLbK45SXXjm1XpNZRcSuAHxX2Mv9kJCVYpPMmvBl1oR8qCHoAw2B76sJeE+D37savN9S4/WGksDlzuR7nZLnLjsqWgn9wg+H55QkW8QzPW3of45fLlZPK7ESyaynldi87UpVzrWRQhzX2/ygIU39vZFCQJgH8/weHghu5Ke6Kpm1FJMuwstLL3HvR9oqeU7zzqMNbM7spmX48uhAEMOvcoAnI5q5xbOan7hWcrNrGb92KeZW5yJ+53iWO+3zucv2DHdr8njCIZ9t4VWUtV4815BY1M4WXT5LTE/w+v5E3j6QwEf7YlmxN5pP90Tx+a4I1uwIZ/32UHaYROLmnkV5xZW3qGfQVtpMmnU8YRt1HP3ImpAP1IR9qCZ0hhTvqfF/W4Xvm0r837Uh7is/9LGFMspoL2/l2DZ/HF9QyJNZSeYXSXHaNwfFkwoUz1hh/qQCm3dcqc5d3IaWNB+bQ9nygIKN91qy9nYLLN/2vSZSKJcHsOo2M9bdI85tmuNhEvePk8KA82S0jLI1vZNno1t5OLhB7nf8xsdw/davhgeD6vlbVCur0rsIrRuSIe2VII7o7c3t4dXYFv4UVMf9Ryq5V1fOQ+6lPK4r4WXfcj4Pr0WXc46eoctPMtecG8TteA07vApYb5vBassUPjdNYr1pItvME9lvk4q9RzbJJ2vou8LJ7fkwNjRGbWo5WdZxJO/0I26jG1GfORL5iSPHPnUieoOW5D1BnPXKoKeuQ9YZ7Rsh2TQar6V26N4SfoYdacqkWVLkBZ7B9nkbbF+1Q/OCDU7LPKg5s7gIZ2xoHM+vI/n2cRu+/qM1XzykQfNx0DWRwnZ1CBvvVfHFH6zZ8qAa74OJ/ywpLqJ1YJyE+kHcy/qwKxnArnQAbfkAMXWDVPVePe9gjO6RSVKbBvEp7cW1sBf3wh4CS7rJbuhncGz+XddL0dk3yumKDuJymok61UhcZgMnzzSjr+9eVB7jShD+QHdNO41pZdREFVATcYaa6AKas6sZ7prrm4wNjFIZU0xJUB7FwXkUBebRmFk3G320FbeR65NLnv8Zcn1zyQs9S88i/2uAMEuFiXqStbkkaXNJdMnhdFj5Vf9PyAwGekfIiaggzuk0iW65JLjkUJhay9gC43PNpLiO//dxnRTXcRmuSorGxiZKSkrp7r54oKOvv5+Ozk6mpgzyLuxmZ2cXY2MXEz3d3T109/RI+ZyYmKCjo0OWF79FW/X1DTQ2NdHU3ExdXR3nzrXP2l+BoaEhysvKKS+vYHj44iHTsbExurouvkseeevqYnBgcN4k1gwGBgbm9GEGg0NDdHZ1zfZlIfT399PV1TnnHeenp+no6GR8fG6CS/Sjq7ub3t75N+1EG3V19RQXFdPWNvdcydDQsPzOme+ZmpqW/RsdNdh/cf9cezsNDY2yjdbWVqamLpoBMdZdXd2zYzY5OUlXZ5ccbzHOzc0tTF0yzvNhQVKIQU9Pz0Cl0qBW26BSa8jKypLPzp4tRKvzlC8SEB9nY2tHYaEhMSQGSavzIPv0aTkA4sNdXFzlIIkBS0tLw87eEaVKg4WlFRobW8LCj8kOCZSVlWHv4ISVlUo+t7W1p7LScM6htrYWHx+/2XeLQfI64s3JkxkLTqyYUGcXV9zctZJUlyIzKwtvb196eq78n4uOH09CrbGmqurieYuk5BTZ76amuYdlzp07J8crIODoHKILCBIFBARiaWklx9bCUkFKyonZ78rJycXPL2D2e/r7B/H28aWsvFz+7unpxcXVDY21DQ6OTvJv4NEgSRwBMda+vv7knTHs74j7R7x9UCrVuLlpUWts8AsIlAt2ISxICqEQBw4ewsfHl8pKPdExcZw+fVo+ExNiYrKfxMTj8nd4eARvvf0OHp5ejI+NU11dwzc7dsrJFdDr9Wz76mtaW9sMq6S+nsysbEmMHTt3S7KJTosBFGzed+CgnIDcvDOcPp0jO1VYVCzbKiws5OAhU6qqLh5Q2X/gIMEhIXJVzIfi4hLWrtvA7j0mZGZlznkWERnJ/v0HL1uxxhDf8MFHH0uijoyMSiJs3LSZTz9bTWXlxTMYon8nT6azfMUn7Nt/gIpLnonVKwi8Z+8+Uk6kUlpaSkxMHNnZp2cXRGxsHGZmlrMqIxTz4HeHycrOlr/FSt+7dz9Hg4LJzc0jLj4Bk737CAsLl89ramo4dNiUhMTEC+WbOXDwO0l8obopySls3LSFjFMLH/pdkBStbW0cNjXHUqGU7BWrbQZi8lxc3OTV29uHnZ0Du3abyJXfdu4cEZFRcvXP1KmqrmbHzl2XDbzokLW17Zx7oWHh7N69l86uuecthIwKlJSUsP/AdwQeDSYrM1tOwDff7iQiInJeUgzJifCRyhUSGoadvcOc1RsdE4OpqZk0X1eCf0Age/cdYNtX2wkJMbQjVvnOXXuorr5IUGEmHZ2c8fMPwNPrCEe8vWefiW/ftceEpKRk+buvr0+qbFNT86xSJB4/Lt8TExtLZmY28QkJcmxz8/LkczHJYk6EYgqIMTYzt0Cr1cnftXV1WCqspIoJtLa0YGpmIUldXFJCfHyCrF9ZsfBhogVJIaS4tKxMSpWpmTmHDpnKCZhBalqalKT4uAQp9ekZp+TLhBxbWilJSEiclfP5SCGeRUZFSwm9FF7ePmg01nPuXYrSklKpLiZ790uzIlbuunUbiYyMmpcUQuWEQmRnZZOamsZuk70UXVAdgcWSQkyykOv4+Hi+3v6NnKi8M/mYmVtKJZzB6Zwc9pjslwQQRBUEbm4xnNwW5lh8i/DRBAQ5hJkRk6rXG8ySMFNfbvuaw6Zm2NjYyWdbv9g2SwphmvaY7JPqIOoK8yoIqr9g1mprjUjR2irb2rfvgCSGuYVCKrFQjYWwMCkmJ6Wkiau+oQFXVzdpToRNFBB/rW3s2LR5Kz6+foyMjHDkiI8sIyZtxuYLXAspYmLj+Pqbb6mprpm9Nzg4JGVUQJgCIadiQIWpETZ+z559hEdEXEaKiYlxAgODWL9hoxw4SaANm9B5eM6WiY6OxtzcYkGncAZ+/v7Y2tnT2dlJaFiYlG7hJAuprrxAiqGhQewdHNi85Uvs7R3kCl2/YbP0lwSEyRMTKpRUQNj71NRUtn+zQ6qxgDDJ3x0yle2LVV9QcJZ9+w+Sk2t4LsZQEE2r9cBdq2XN2g1ERUfPfqcxKVpaWjAzN5djLRxOQSqh7DNzNh8WJIWIDKRT4ucvFUKpUqGwUjE4aEjaCCdcMG/J0rc4ceKEvHfmTD7r1m2Q/sBMOQGxksTqEqydgSDFsYgIFArl7D0BQTaVxlquBNGR8GMRmJlZkHHK4AsUFRVx6LDZHJ/i4MFDhISGXkYKMUCiHWGnxeosKS01mCeTvbP1BQm3bP1SKkFUVAzHIqJkPWN4+/jIlSkkf2YwhZQLf0aokYBwtHeb7CM9I0MqRWlpmfTJhNIKMokFFh5+TJo7X18/0tJO4q7V8e2OXbP+V2xcPOYWlvT2GEgqFoTor3DaBYSpEWa9oqJS9jc4JBQLS0sZjQgIn8LU1FyaIfmNLS1yEYlFIfyY6OhY+b6goGDGxy/PFAssSAphizMyTuHpeQRnZ1f8/AOprjHYsRmIjgjSNF/wvsVqDggMlOy+NHQT0nw0OEQO6AyEXT9bWChtnDHa29sJCw+Xci3eHRkZLe8JiIkQkt/SYiCYQXGiyM8vmBN9iPeLFSxINePECfT3D0hZP5OfL3+XlZXLqET0Uyidl5c35RWXS2tW9mk50CMjF8NjoS5i1Qs/QvRHtCkm9VKIlSmUYsbvEM5m2smTUnmF7+Ht40dBQcFsyFlSWiZJPOOPiTGNioqe9SHEO6OjY+Q4CHT3dBMSEiqdVQFBPuG8CtMvIMZcjJ+7u1aqgzDP4htF2LoQFiTFDMSKF6t3PqkRkyAcpEsdN9Fp49BQOInivnF4JiZrZjCMMTk1KTsoYvZLCSbaHhkdmfMO8W0T87BefNt87Yv7M/0Rq03kMMTg9fX2yb/GeQcBcU+0dem3iP6IdsRfcV/82zjkFfeHh0cu+w7xnvb2jlmzOIOJiUlZdvq8Yaxm2p1RwZl3Xtp/UX5GmQ3PR2cXwkx58T5BKEG2K+VzBK5Kiuv4/w/XSXEdl+E6Ka7jMlwnxXVchv8LhJAQVt1RvDcAAAAASUVORK5CYII=" alt="SWAM" />
+      <div class="header-logo-divider"></div>
+      <div class="header-logo-text">
+        <h1>Communication Center</h1>
+        <span>Référentiel BackOffice</span>
+      </div>
+    </div>
+    <div class="header-search">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="searchInput" placeholder="Rechercher par destinataire, objet ou contenu…" />
+      <button class="search-clear btn btn-ghost btn-icon" id="searchClear">✕</button>
+    </div>
+    <div class="header-actions">
+      <div class="sync-badge" id="syncBadge">
+        <div class="sync-dot"></div>
+        <span id="syncLabel">Connexion…</span>
+      </div>
+      <button class="btn btn-primary" id="btnNewComm">＋ Nouvelle communication</button>
+    </div>
+  </header>
+
+  <div class="main-body">
+    <aside>
+      <div class="sidebar-top">
+        <button class="btn btn-secondary" id="btnManageBlocks" style="width:100%;justify-content:center;">⚙ Gérer les blocs</button>
+      </div>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
+    </aside>
+
+    <main class="content">
+      <div class="content-header" id="contentHeader"></div>
+      <div class="comms-list" id="commsList"></div>
+    </main>
+
+    <div class="detail-panel hidden" id="detailPanel"></div>
+  </div>
+</div>
+
+<!-- MODAL COMM -->
+<div class="modal-overlay" id="modalComm">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalCommTitle">Nouvelle communication</h3>
+      <button class="btn btn-ghost btn-icon" id="closeModalComm">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Bloc principal <span class="req">*</span></label>
+          <select class="form-select" id="formBlockId"></select>
+          <div class="form-error" id="errBlock">Choisissez un bloc.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sous-bloc <span class="req">*</span></label>
+          <select class="form-select" id="formSubId" disabled></select>
+          <div class="form-error" id="errSub">Choisissez un sous-bloc.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Destinataires <span class="req">*</span></label>
+        <input class="form-input" id="formTo" type="text" placeholder="ex: equipe@swam.ma, direction@swam.ma" />
+        <div class="form-hint">Séparez plusieurs destinataires par une virgule.</div>
+        <div class="form-error" id="errTo">Renseignez au moins un destinataire.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Objet du mail <span class="req">*</span></label>
+        <input class="form-input" id="formSubject" type="text" placeholder="ex: [LIS] Retard réception acquéreurs" />
+        <div class="form-error" id="errSubject">Renseignez l'objet.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Corps du message <span class="req">*</span></label>
+        <textarea class="form-textarea" id="formBody" rows="8" placeholder="Rédigez votre message ici…"></textarea>
+        <div class="form-error" id="errBody">Rédigez le corps du message.</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="cancelModalComm">Annuler</button>
+      <button class="btn btn-primary" id="saveComm">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL BLOCS -->
+<div class="modal-overlay" id="modalBlocks">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Gérer les blocs &amp; sous-blocs</h3>
+      <button class="btn btn-ghost btn-icon" id="closeModalBlocks">✕</button>
+    </div>
+    <div class="modal-body" id="modalBlocksBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="closeModalBlocksFooter">Fermer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRM -->
+<div class="modal-overlay" id="modalConfirm">
+  <div class="modal confirm-dialog">
+    <div class="modal-header">
+      <h3 id="confirmTitle">Confirmation</h3>
+      <button class="btn btn-ghost btn-icon" id="closeConfirm">✕</button>
+    </div>
+    <div class="modal-body"><p id="confirmMessage"></p></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="confirmCancel">Annuler</button>
+      <button class="btn btn-danger" id="confirmOk">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================================
+   SUPABASE CONFIG
+   ============================================================ */
+const SUPABASE_URL = "https://zivivladqwmxypgposch.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inppdml2bGFkcXdteHlwZ3Bvc2NoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4NjE0NzMsImV4cCI6MjA5NzQzNzQ3M30.PCUtvjqhxfxf5vLMgRgH6EJkoGClU2w9pcoQIjyXZ5s";
+const API = (path) => SUPABASE_URL + "/rest/v1/" + path;
+const HEADERS = {
+  "apikey": SUPABASE_KEY,
+  "Authorization": "Bearer " + SUPABASE_KEY,
+  "Content-Type": "application/json",
+  "Prefer": "return=representation"
+};
+
+async function sbGet(table, params="") {
+  const r = await fetch(API(table + (params ? "?" + params : "")), { headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPost(table, body) {
+  const r = await fetch(API(table), { method:"POST", headers: HEADERS, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbPatch(table, id, body) {
+  const r = await fetch(API(table + `?id=eq.${id}`), { method:"PATCH", headers: HEADERS, body: JSON.stringify(body) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function sbDelete(table, filter) {
+  const r = await fetch(API(table + "?" + filter), { method:"DELETE", headers: HEADERS });
+  if (!r.ok) throw new Error(await r.text());
+}
+
+/* ============================================================
+   BLOCK COLORS
+   ============================================================ */
+const BLOCK_COLORS = ["#0095B6","#6B3FA0","#00C2CB","#F59E0B","#E84B6A","#22C55E","#F97316","#3D7DD8"];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let data = { blocks: [], subs: [], comms: [] };
+let state = {
+  selectedBlockId: null,
+  selectedSubId:   null,
+  selectedCommId:  null,
+  searchQuery:     "",
+  editingCommId:   null,
+  loading:         true
+};
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+function esc(s) { return String(s??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function fmtDate(ts) {
+  const d = new Date(Number(ts));
+  return d.toLocaleDateString("fr-FR",{day:"2-digit",month:"short",year:"numeric"}) + " " +
+         d.toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"});
+}
+function getBlock(id) { return data.blocks.find(b => b.id === id); }
+function getSub(subId) { return data.subs.find(s => s.id === subId); }
+function getComm(id) { return data.comms.find(c => c.id === id); }
+function nextColor() {
+  const used = data.blocks.map(b => b.color);
+  return BLOCK_COLORS.find(c => !used.includes(c)) || BLOCK_COLORS[data.blocks.length % BLOCK_COLORS.length];
+}
+
+/* ============================================================
+   SYNC STATUS
+   ============================================================ */
+function setSyncStatus(status, label) {
+  const badge = document.getElementById("syncBadge");
+  const lbl   = document.getElementById("syncLabel");
+  badge.className = "sync-badge " + status;
+  lbl.textContent = label;
+}
+
+/* ============================================================
+   LOAD DATA FROM SUPABASE
+   ============================================================ */
+async function loadAll() {
+  setSyncStatus("syncing", "Chargement…");
+  try {
+    const [blocks, subs, comms] = await Promise.all([
+      sbGet("blocks", "order=position.asc"),
+      sbGet("subs",   "order=position.asc"),
+      sbGet("comms",  "order=created_at.desc")
+    ]);
+    data.blocks = blocks;
+    data.subs   = subs;
+    data.comms  = comms;
+    state.loading = false;
+    setSyncStatus("ok", "Synchronisé");
+    setTimeout(() => setSyncStatus("ok", "En ligne"), 2000);
+    renderAll();
+  } catch(e) {
+    setSyncStatus("err", "Erreur de connexion");
+    state.loading = false;
+    renderAll();
+    toast("Erreur de connexion à Supabase.", "error");
+  }
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+function toast(msg, type="info") {
+  const el = document.createElement("div");
+  el.className = `toast ${type}`;
+  const icon = type==="success" ? "✓" : type==="error" ? "✕" : "ℹ";
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  document.getElementById("toastContainer").appendChild(el);
+  setTimeout(() => { el.style.animation="fadeOut .3s ease forwards"; setTimeout(()=>el.remove(),300); }, 2800);
+}
+
+/* ============================================================
+   CONFIRM
+   ============================================================ */
+let _confirmResolve = null;
+function showConfirm(title, msg) {
+  return new Promise(resolve => {
+    _confirmResolve = resolve;
+    document.getElementById("confirmTitle").textContent = title;
+    document.getElementById("confirmMessage").textContent = msg;
+    openModal("modalConfirm");
+  });
+}
+document.getElementById("confirmOk").onclick     = () => { closeModal("modalConfirm"); _confirmResolve && _confirmResolve(true); };
+document.getElementById("confirmCancel").onclick  = () => { closeModal("modalConfirm"); _confirmResolve && _confirmResolve(false); };
+document.getElementById("closeConfirm").onclick   = () => { closeModal("modalConfirm"); _confirmResolve && _confirmResolve(false); };
+
+/* ============================================================
+   MODALS
+   ============================================================ */
+function openModal(id)  { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-overlay").forEach(ov => {
+  ov.addEventListener("click", e => { if(e.target===ov) closeModal(ov.id); });
+});
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+function renderSidebar() {
+  const nav = document.getElementById("sidebarNav");
+  if (!data.blocks.length) {
+    nav.innerHTML = `<div class="empty-state" style="padding:24px 12px;">
+      <div class="empty-icon">🗂</div>
+      <p style="font-size:11px;">Aucun bloc.<br>Créez-en un via ⚙ Gérer les blocs.</p></div>`;
+    return;
+  }
+  nav.innerHTML = data.blocks.map(block => {
+    const blockSubs = data.subs.filter(s => s.block_id === block.id);
+    const totalComms = data.comms.filter(c => c.block_id === block.id).length;
+    const isOpen = block.id === state.selectedBlockId;
+    const subsHTML = blockSubs.map(sub => {
+      const cnt = data.comms.filter(c => c.sub_id === sub.id).length;
+      return `<div class="nav-sub ${sub.id===state.selectedSubId?"active":""}" data-bid="${block.id}" data-sid="${sub.id}">
+        <div class="nav-sub-bar" style="background:${block.color};"></div>
+        <span class="nav-sub-label" title="${esc(sub.label)}">${esc(sub.label)}</span>
+        ${cnt ? `<span class="nav-sub-count">${cnt}</span>` : ""}
+      </div>`;
+    }).join("");
+    return `<div class="nav-block ${isOpen?"open":""}">
+      <div class="nav-block-header ${isOpen?"active":""}" data-bid="${block.id}">
+        <div class="nav-block-dot" style="background:${block.color};"></div>
+        <span class="nav-block-label">${esc(block.label)}</span>
+        ${totalComms ? `<span class="nav-block-count">${totalComms}</span>` : ""}
+        <span class="nav-block-chevron">▶</span>
+      </div>
+      <div class="nav-block-children">${subsHTML}</div>
+    </div>`;
+  }).join("");
+
+  nav.querySelectorAll(".nav-block-header").forEach(el => {
+    el.addEventListener("click", () => {
+      const bid = el.dataset.bid;
+      state.selectedBlockId = state.selectedBlockId===bid ? null : bid;
+      state.selectedSubId   = null;
+      state.selectedCommId  = null;
+      renderAll();
+    });
+  });
+  nav.querySelectorAll(".nav-sub").forEach(el => {
+    el.addEventListener("click", () => {
+      state.selectedBlockId = el.dataset.bid;
+      state.selectedSubId   = el.dataset.sid;
+      state.selectedCommId  = null;
+      renderAll();
+    });
+  });
+}
+
+/* ============================================================
+   CONTENT HEADER
+   ============================================================ */
+function renderContentHeader() {
+  const header = document.getElementById("contentHeader");
+  const q = state.searchQuery;
+  if (q) {
+    const cnt = getFilteredComms().length;
+    header.innerHTML = `<div class="breadcrumb"><b>Recherche</b><span class="sep">›</span><span>"${esc(q)}"</span></div>
+      <div class="content-title-row"><h2>Résultats</h2><span class="count-badge">${cnt} résultat${cnt>1?"s":""}</span></div>`;
+    return;
+  }
+  const block = state.selectedBlockId ? getBlock(state.selectedBlockId) : null;
+  const sub   = state.selectedSubId   ? getSub(state.selectedSubId)     : null;
+  if (!block) {
+    const t = data.comms.length;
+    header.innerHTML = `<div class="breadcrumb"><b>Toutes les communications</b></div>
+      <div class="content-title-row"><h2>Vue d'ensemble</h2><span class="count-badge">${t} communication${t>1?"s":""}</span></div>`;
+    return;
+  }
+  const cnt = getFilteredComms().length;
+  header.innerHTML = `<div class="breadcrumb">
+    <div class="nav-block-dot" style="background:${block.color};width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;"></div>
+    <b>${esc(block.label)}</b>
+    ${sub ? `<span class="sep">›</span><span>${esc(sub.label)}</span>` : ""}
+  </div>
+  <div class="content-title-row">
+    <h2>${esc(sub ? sub.label : block.label)}</h2>
+    <span class="count-badge">${cnt} communication${cnt>1?"s":""}</span>
+    <button class="btn btn-primary" id="btnNewCommCtx" style="margin-left:auto;padding:5px 10px;font-size:11px;">＋ Nouvelle</button>
+  </div>`;
+  document.getElementById("btnNewCommCtx")?.addEventListener("click", () => openCommModal());
+}
+
+/* ============================================================
+   FILTER
+   ============================================================ */
+function getFilteredComms() {
+  let list = [...data.comms];
+  const q = state.searchQuery.toLowerCase().trim();
+  if (q) return list.filter(c => c.to.toLowerCase().includes(q) || c.subject.toLowerCase().includes(q) || c.body.toLowerCase().includes(q));
+  if (state.selectedSubId)   return list.filter(c => c.sub_id === state.selectedSubId);
+  if (state.selectedBlockId) return list.filter(c => c.block_id === state.selectedBlockId);
+  return list;
+}
+
+/* ============================================================
+   COMMS LIST
+   ============================================================ */
+function hl(text, q) {
+  if (!q) return esc(text);
+  const re = new RegExp("(" + q.replace(/[.*+?^${}()|[\]\\]/g,"\\$&") + ")","gi");
+  return esc(text).replace(re,"<mark>$1</mark>");
+}
+
+function renderCommsList() {
+  const el = document.getElementById("commsList");
+  if (state.loading) {
+    el.innerHTML = `<div class="loader-wrap"><div class="spinner"></div><span>Chargement des communications…</span></div>`;
+    return;
+  }
+  const q    = state.searchQuery.toLowerCase().trim();
+  const list = getFilteredComms();
+  if (!list.length) {
+    el.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">${q ? "🔍" : "📭"}</div>
+      <p>${q ? "Aucune communication ne correspond." : "Aucune communication enregistrée."}</p>
+      <small>${q ? "Essayez avec d'autres mots-clés." : "Cliquez sur + Nouvelle pour commencer."}</small>
+    </div>`;
+    return;
+  }
+  el.innerHTML = list.map(comm => {
+    const block = getBlock(comm.block_id);
+    const sub   = getSub(comm.sub_id);
+    const color = block ? block.color : "#7A90AE";
+    const showCtx = q || !state.selectedSubId;
+    return `<div class="comm-card ${comm.id===state.selectedCommId?"selected":""}" data-id="${comm.id}">
+      <div class="comm-card-top">
+        <div class="comm-card-accent" style="background:${color};"></div>
+        <div class="comm-card-info">
+          <div class="comm-card-subject">${hl(comm.subject,q)}</div>
+          <div class="comm-card-to">A : <span>${hl(comm.to,q)}</span></div>
+          ${showCtx && block ? `<div class="comm-card-context">
+            <span class="ctx-tag" style="background:${color}18;color:${color};">${esc(block.label)}</span>
+            ${sub ? `<span class="ctx-tag" style="background:rgba(107,63,160,.1);color:#6B3FA0;">${esc(sub.label)}</span>` : ""}
+          </div>` : ""}
+        </div>
+      </div>
+      <div class="comm-card-meta">
+        <span class="comm-card-date">📅 ${fmtDate(comm.created_at)}</span>
+      </div>
+      <div class="comm-card-actions">
+        <button class="btn btn-ghost btn-icon act-edit" data-id="${comm.id}" title="Modifier">✏️</button>
+        <button class="btn btn-ghost btn-icon act-copy" data-id="${comm.id}" title="Copier">📋</button>
+        <button class="btn btn-ghost btn-icon act-del"  data-id="${comm.id}" title="Supprimer">🗑</button>
+      </div>
+    </div>`;
+  }).join("");
+
+  el.querySelectorAll(".comm-card").forEach(card => {
+    card.addEventListener("click", e => { if(e.target.closest("button")) return; state.selectedCommId=card.dataset.id; renderAll(); });
+  });
+  el.querySelectorAll(".act-edit").forEach(btn => btn.addEventListener("click", () => openCommModal(btn.dataset.id)));
+  el.querySelectorAll(".act-copy").forEach(btn => btn.addEventListener("click", () => copyComm(btn.dataset.id)));
+  el.querySelectorAll(".act-del").forEach(btn  => btn.addEventListener("click", () => deleteComm(btn.dataset.id)));
+}
+
+/* ============================================================
+   DETAIL PANEL
+   ============================================================ */
+function renderDetailPanel() {
+  const panel = document.getElementById("detailPanel");
+  const comm  = state.selectedCommId ? getComm(state.selectedCommId) : null;
+  if (!comm) { panel.classList.add("hidden"); return; }
+  panel.classList.remove("hidden");
+  const block = getBlock(comm.block_id);
+  const sub   = getSub(comm.sub_id);
+  const color = block ? block.color : "#7A90AE";
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div class="nav-block-dot" style="background:${color};"></div>
+      <h3>Détail communication</h3>
+      <button class="btn btn-ghost btn-icon" id="closeDetail">✕</button>
+    </div>
+    <div class="panel-body">
+      <div class="field-group">
+        <div class="field-label">Classification</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          ${block ? `<span class="tag tag-block">${esc(block.label)}</span>` : ""}
+          ${sub   ? `<span class="tag tag-sub">${esc(sub.label)}</span>`    : ""}
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Destinataires</div>
+        <div class="field-value">${esc(comm.to)}</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Objet</div>
+        <div class="field-value" style="font-weight:600;">${esc(comm.subject)}</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Corps du message</div>
+        <div class="field-value body-text">${esc(comm.body)}</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Créé le</div>
+        <div class="field-value">${fmtDate(comm.created_at)}</div>
+      </div>
+      ${comm.updated_at ? `<div class="field-group"><div class="field-label">Modifié le</div><div class="field-value">${fmtDate(comm.updated_at)}</div></div>` : ""}
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-primary" id="detailEdit">✏️ Modifier</button>
+      <button class="btn btn-success" id="detailCopy">📋 Copier</button>
+      <button class="btn btn-danger"  id="detailDel">🗑 Supprimer</button>
+    </div>`;
+  document.getElementById("closeDetail").onclick = () => { state.selectedCommId=null; renderAll(); };
+  document.getElementById("detailEdit").onclick  = () => openCommModal(comm.id);
+  document.getElementById("detailCopy").onclick  = () => copyComm(comm.id);
+  document.getElementById("detailDel").onclick   = () => deleteComm(comm.id);
+}
+
+/* ============================================================
+   COMM MODAL
+   ============================================================ */
+function openCommModal(commId=null) {
+  state.editingCommId = commId;
+  const comm = commId ? getComm(commId) : null;
+  document.getElementById("modalCommTitle").textContent = comm ? "Modifier la communication" : "Nouvelle communication";
+  ["errBlock","errSub","errTo","errSubject","errBody"].forEach(id => document.getElementById(id).classList.remove("visible"));
+
+  const selBlock = document.getElementById("formBlockId");
+  selBlock.innerHTML = `<option value="">— Sélectionner un bloc —</option>` +
+    data.blocks.map(b => `<option value="${b.id}" ${comm&&comm.block_id===b.id?"selected":""}>${esc(b.label)}</option>`).join("");
+
+  function populateSubs(blockId) {
+    const selSub = document.getElementById("formSubId");
+    const blockSubs = data.subs.filter(s => s.block_id === blockId);
+    if (!blockId || !blockSubs.length) {
+      selSub.innerHTML = `<option value="">— Aucun sous-bloc —</option>`;
+      selSub.disabled = true; return;
+    }
+    selSub.disabled = false;
+    selSub.innerHTML = `<option value="">— Sélectionner —</option>` +
+      blockSubs.map(s => `<option value="${s.id}" ${comm&&comm.sub_id===s.id?"selected":""}>${esc(s.label)}</option>`).join("");
+  }
+
+  const initBlock = comm ? comm.block_id : (state.selectedBlockId||"");
+  selBlock.value = initBlock;
+  populateSubs(initBlock);
+  if (state.selectedSubId && !comm) document.getElementById("formSubId").value = state.selectedSubId;
+  selBlock.onchange = () => { populateSubs(selBlock.value); document.getElementById("formSubId").value=""; };
+
+  document.getElementById("formTo").value      = comm ? comm.to      : "";
+  document.getElementById("formSubject").value = comm ? comm.subject : "";
+  document.getElementById("formBody").value    = comm ? comm.body    : "";
+  openModal("modalComm");
+}
+
+document.getElementById("closeModalComm").onclick  = () => closeModal("modalComm");
+document.getElementById("cancelModalComm").onclick = () => closeModal("modalComm");
+
+document.getElementById("saveComm").onclick = async () => {
+  const blockId  = document.getElementById("formBlockId").value;
+  const subId    = document.getElementById("formSubId").value;
+  const to       = document.getElementById("formTo").value.trim();
+  const subject  = document.getElementById("formSubject").value.trim();
+  const body     = document.getElementById("formBody").value.trim();
+
+  let valid = true;
+  if (!blockId) { document.getElementById("errBlock").classList.add("visible"); valid=false; } else document.getElementById("errBlock").classList.remove("visible");
+  if (!subId)   { document.getElementById("errSub").classList.add("visible"); valid=false; }   else document.getElementById("errSub").classList.remove("visible");
+  if (!to)      { document.getElementById("errTo").classList.add("visible"); valid=false; }     else document.getElementById("errTo").classList.remove("visible");
+  if (!subject) { document.getElementById("errSubject").classList.add("visible"); valid=false; } else document.getElementById("errSubject").classList.remove("visible");
+  if (!body)    { document.getElementById("errBody").classList.add("visible"); valid=false; }   else document.getElementById("errBody").classList.remove("visible");
+  if (!valid) return;
+
+  const btn = document.getElementById("saveComm");
+  btn.disabled = true; btn.textContent = "Enregistrement…";
+  setSyncStatus("syncing", "Sauvegarde…");
+
+  try {
+    if (state.editingCommId) {
+      const updated = await sbPatch("comms", state.editingCommId, { block_id:blockId, sub_id:subId, to, subject, body, updated_at:Date.now() });
+      const idx = data.comms.findIndex(c => c.id===state.editingCommId);
+      if (idx>=0) data.comms[idx] = updated[0];
+      toast("Communication mise à jour.", "success");
+    } else {
+      const created = await sbPost("comms", { id:uid(), block_id:blockId, sub_id:subId, to, subject, body, created_at:Date.now() });
+      data.comms.unshift(created[0]);
+      state.selectedBlockId = blockId;
+      state.selectedSubId   = subId;
+      toast("Communication enregistrée.", "success");
+    }
+    setSyncStatus("ok", "Synchronisé");
+    closeModal("modalComm");
+    renderAll();
+  } catch(e) {
+    setSyncStatus("err", "Erreur");
+    toast("Erreur lors de l'enregistrement.", "error");
+  } finally {
+    btn.disabled=false; btn.textContent="Enregistrer";
+  }
+};
+
+/* ============================================================
+   COPY
+   ============================================================ */
+async function copyComm(commId) {
+  const comm = getComm(commId);
+  if (!comm) return;
+  try {
+    await navigator.clipboard.writeText(`A : ${comm.to}\nObjet : ${comm.subject}\n\n${comm.body}`);
+    toast("Contenu copié dans le presse-papiers.", "success");
+  } catch { toast("Impossible de copier.", "error"); }
+}
+
+/* ============================================================
+   DELETE COMM
+   ============================================================ */
+async function deleteComm(commId) {
+  const comm = getComm(commId);
+  if (!comm) return;
+  const ok = await showConfirm("Supprimer la communication", `Supprimer "${comm.subject}" ? Cette action est irréversible.`);
+  if (!ok) return;
+  setSyncStatus("syncing","Suppression…");
+  try {
+    await sbDelete("comms", `id=eq.${commId}`);
+    data.comms = data.comms.filter(c => c.id!==commId);
+    if (state.selectedCommId===commId) state.selectedCommId=null;
+    setSyncStatus("ok","Synchronisé");
+    toast("Communication supprimée.", "info");
+    renderAll();
+  } catch { setSyncStatus("err","Erreur"); toast("Erreur lors de la suppression.", "error"); }
+}
+
+/* ============================================================
+   BLOCKS MODAL
+   ============================================================ */
+function openBlocksModal() { renderBlocksModal(); openModal("modalBlocks"); }
+
+function renderBlocksModal() {
+  const body = document.getElementById("modalBlocksBody");
+  const list = data.blocks.map(block => {
+    const blockSubs = data.subs.filter(s => s.block_id===block.id);
+    return `<div style="margin-bottom:12px;background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg-card);">
+        <div style="width:8px;height:8px;border-radius:50%;background:${block.color};flex-shrink:0;"></div>
+        <input class="form-input blk-label-inp" data-bid="${block.id}" value="${esc(block.label)}"
+          style="flex:1;padding:4px 8px;font-weight:600;font-size:12px;" />
+        <button class="btn btn-danger btn-icon del-block" data-bid="${block.id}" style="padding:4px 7px;font-size:11px;">🗑</button>
+      </div>
+      <div style="padding:8px 12px;">
+        <div style="font-size:10px;color:var(--text-muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;">Sous-blocs</div>
+        ${blockSubs.map(sub => `
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+            <div style="width:3px;height:14px;border-radius:1px;background:${block.color};flex-shrink:0;"></div>
+            <input class="form-input sub-label-inp" data-sid="${sub.id}" value="${esc(sub.label)}"
+              style="flex:1;padding:4px 8px;font-size:12px;" />
+            <button class="btn btn-danger btn-icon del-sub" data-sid="${sub.id}" style="padding:4px 7px;font-size:11px;">✕</button>
+          </div>`).join("")}
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <input class="form-input new-sub-inp" data-bid="${block.id}" placeholder="Nouveau sous-bloc…" style="flex:1;font-size:12px;" />
+          <button class="btn btn-secondary add-sub-btn" data-bid="${block.id}" style="font-size:11px;padding:5px 10px;">＋</button>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  body.innerHTML = `<div>
+    ${list || `<div style="color:var(--text-muted);font-size:12px;padding:8px 0;">Aucun bloc. Créez-en un ci-dessous.</div>`}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <input class="form-input" id="newBlockLabel" placeholder="Nom du nouveau bloc…" style="flex:1;" />
+      <button class="btn btn-primary" id="addBlockBtn">Ajouter</button>
+    </div>
+  </div>`;
+
+  // Add block
+  document.getElementById("addBlockBtn").onclick = async () => {
+    const label = document.getElementById("newBlockLabel").value.trim();
+    if (!label) return;
+    setSyncStatus("syncing","Sauvegarde…");
+    try {
+      const res = await sbPost("blocks", { id:uid(), label, color:nextColor(), position:data.blocks.length });
+      data.blocks.push(res[0]);
+      setSyncStatus("ok","Synchronisé");
+      renderBlocksModal(); renderSidebar();
+    } catch { setSyncStatus("err","Erreur"); toast("Erreur lors de la création du bloc.","error"); }
+  };
+  document.getElementById("newBlockLabel").onkeydown = e => { if(e.key==="Enter") document.getElementById("addBlockBtn").click(); };
+
+  // Rename block
+  body.querySelectorAll(".blk-label-inp").forEach(inp => {
+    inp.onchange = async () => {
+      try { await sbPatch("blocks", inp.dataset.bid, { label:inp.value.trim() }); const b=getBlock(inp.dataset.bid); if(b) b.label=inp.value.trim(); renderSidebar(); } catch { toast("Erreur renommage bloc.","error"); }
+    };
+  });
+
+  // Rename sub
+  body.querySelectorAll(".sub-label-inp").forEach(inp => {
+    inp.onchange = async () => {
+      try { await sbPatch("subs", inp.dataset.sid, { label:inp.value.trim() }); const s=getSub(inp.dataset.sid); if(s) s.label=inp.value.trim(); renderSidebar(); } catch { toast("Erreur renommage sous-bloc.","error"); }
+    };
+  });
+
+  // Delete block
+  body.querySelectorAll(".del-block").forEach(btn => {
+    btn.onclick = async () => {
+      const b = getBlock(btn.dataset.bid);
+      const cnt = data.comms.filter(c => c.block_id===btn.dataset.bid).length;
+      const ok = await showConfirm("Supprimer le bloc", `Supprimer "${b.label}"${cnt?` et ses ${cnt} communication(s)`:""} ?`);
+      if (!ok) return;
+      setSyncStatus("syncing","Suppression…");
+      try {
+        await sbDelete("blocks", `id=eq.${btn.dataset.bid}`);
+        data.blocks = data.blocks.filter(x => x.id!==btn.dataset.bid);
+        data.subs   = data.subs.filter(x => x.block_id!==btn.dataset.bid);
+        data.comms  = data.comms.filter(x => x.block_id!==btn.dataset.bid);
+        if (state.selectedBlockId===btn.dataset.bid) { state.selectedBlockId=null; state.selectedSubId=null; }
+        setSyncStatus("ok","Synchronisé");
+        renderBlocksModal(); renderAll();
+      } catch { setSyncStatus("err","Erreur"); toast("Erreur suppression bloc.","error"); }
+    };
+  });
+
+  // Delete sub
+  body.querySelectorAll(".del-sub").forEach(btn => {
+    btn.onclick = async () => {
+      const s = getSub(btn.dataset.sid);
+      const cnt = data.comms.filter(c => c.sub_id===btn.dataset.sid).length;
+      const ok = await showConfirm("Supprimer le sous-bloc", `Supprimer "${s.label}"${cnt?` et ses ${cnt} communication(s)`:""} ?`);
+      if (!ok) return;
+      setSyncStatus("syncing","Suppression…");
+      try {
+        await sbDelete("subs", `id=eq.${btn.dataset.sid}`);
+        data.subs  = data.subs.filter(x => x.id!==btn.dataset.sid);
+        data.comms = data.comms.filter(x => x.sub_id!==btn.dataset.sid);
+        if (state.selectedSubId===btn.dataset.sid) state.selectedSubId=null;
+        setSyncStatus("ok","Synchronisé");
+        renderBlocksModal(); renderAll();
+      } catch { setSyncStatus("err","Erreur"); toast("Erreur suppression sous-bloc.","error"); }
+    };
+  });
+
+  // Add sub
+  body.querySelectorAll(".add-sub-btn").forEach(btn => {
+    btn.onclick = async () => {
+      const inp = body.querySelector(`.new-sub-inp[data-bid="${btn.dataset.bid}"]`);
+      const label = inp.value.trim();
+      if (!label) return;
+      setSyncStatus("syncing","Sauvegarde…");
+      try {
+        const blockSubs = data.subs.filter(s => s.block_id===btn.dataset.bid);
+        const res = await sbPost("subs", { id:uid(), block_id:btn.dataset.bid, label, position:blockSubs.length });
+        data.subs.push(res[0]);
+        inp.value="";
+        setSyncStatus("ok","Synchronisé");
+        renderBlocksModal(); renderSidebar();
+      } catch { setSyncStatus("err","Erreur"); toast("Erreur création sous-bloc.","error"); }
+    };
+    body.querySelector(`.new-sub-inp[data-bid="${btn.dataset.bid}"]`).onkeydown = e => { if(e.key==="Enter") btn.click(); };
+  });
+}
+
+document.getElementById("btnManageBlocks").onclick       = openBlocksModal;
+document.getElementById("closeModalBlocks").onclick      = () => closeModal("modalBlocks");
+document.getElementById("closeModalBlocksFooter").onclick= () => closeModal("modalBlocks");
+
+/* ============================================================
+   SEARCH
+   ============================================================ */
+document.getElementById("searchInput").addEventListener("input", e => {
+  state.searchQuery = e.target.value;
+  state.selectedCommId = null;
+  document.getElementById("searchClear").classList.toggle("visible", !!state.searchQuery);
+  renderAll();
+});
+document.getElementById("searchClear").addEventListener("click", () => {
+  document.getElementById("searchInput").value="";
+  state.searchQuery="";
+  document.getElementById("searchClear").classList.remove("visible");
+  renderAll();
+  document.getElementById("searchInput").focus();
+});
+
+document.getElementById("btnNewComm").onclick = () => openCommModal();
+
+/* ============================================================
+   RENDER ALL
+   ============================================================ */
+function renderAll() {
+  renderSidebar();
+  renderContentHeader();
+  renderCommsList();
+  renderDetailPanel();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderAll(); // show loading state
+loadAll();   // fetch from Supabase
+</script>
+</body>
+</html>
